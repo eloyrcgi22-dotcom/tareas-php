@@ -1,75 +1,88 @@
 <?php
-// Inicializamos variables de datos y de errores
-$nombre = $fecha = $hora = $comensales = $email = $telefono = $comentarios = "";
-$errores = [];
-$reserva_confirmada = false;
+// Variables para guardar los datos y que no den error al cargar la primera vez
+$nombre = "";
+$fecha = "";
+$hora = "";
+$comensales = "";
+$email = "";
+$telefono = "";
+$comentarios = "";
 
-// Procesamos al recibir el formulario por POST
+// Variables para los mensajes de error
+$err_nombre = "";
+$err_fecha = "";
+$err_hora = "";
+$err_comensales = "";
+$err_email = "";
+$err_telefono = "";
+
+$todo_ok = true;
+$mostrar_exito = false;
+
+// Comprobar si se ha pulsado enviar
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
-    // 1. Validar Nombre y apellidos (Obligatorio)
+    // Validar Nombre
     if (empty($_POST['nombre'])) {
-        $errores['nombre'] = "Dato requerido";
-        $nombre = "";
+        $err_nombre = "Dato requerido";
+        $todo_ok = false;
     } else {
-        $nombre = htmlspecialchars(trim($_POST['nombre']));
+        $nombre = trim($_POST['nombre']);
     }
     
-    // 2. Validar Fecha (Obligatorio - cuadro de texto según nota)
+    // Validar Fecha
     if (empty($_POST['fecha'])) {
-        $errores['fecha'] = "Dato requerido";
-        $fecha = "";
+        $err_fecha = "Dato requerido";
+        $todo_ok = false;
     } else {
-        $fecha = htmlspecialchars(trim($_POST['fecha']));
+        $fecha = trim($_POST['fecha']);
     }
     
-    // 3. Validar Hora (Obligatorio)
+    // Validar Hora
     if (empty($_POST['hora'])) {
-        $errores['hora'] = "Dato requerido";
-        $hora = "";
+        $err_hora = "Dato requerido";
+        $todo_ok = false;
     } else {
-        $hora = htmlspecialchars(trim($_POST['hora']));
+        $hora = $_POST['hora'];
     }
     
-    // 4. Validar Nº de comensales (Obligatorio)
+    // Validar Comensales
     if (empty($_POST['comensales'])) {
-        $errores['comensales'] = "Dato requerido";
-        $comensales = "";
+        $err_comensales = "Dato requerido";
+        $todo_ok = false;
     } else {
-        $comensales = htmlspecialchars(trim($_POST['comensales']));
+        $comensales = trim($_POST['comensales']);
     }
     
-    // 5. Validar E-mail (Obligatorio y bien formado)
+    // Validar Email
     if (empty($_POST['email'])) {
-        $errores['email'] = "Dato requerido";
-        $email = "";
+        $err_email = "Dato requerido";
+        $todo_ok = false;
     } else {
-        $email_previo = trim($_POST['email']);
-        if (filter_var($email_previo, FILTER_VALIDATE_EMAIL)) {
-            $email = htmlspecialchars($email_previo);
+        $email_temporal = trim($_POST['email']);
+        // Comprobacion del formato de email
+        if (strpos($email_temporal, '@') !== false && strpos($email_temporal, '.') !== false) {
+            $email = $email_temporal;
         } else {
-            $errores['email'] = "Introduzca un email correcto";
-            $email = ""; // Se vacía al ser incorrecto
+            $err_email = "Introduzca un email correcto";
+            $todo_ok = false;
         }
     }
     
-    // 6. Validar Teléfono (Obligatorio)
+    // Validar Telefono
     if (empty($_POST['telefono'])) {
-        $errores['telefono'] = "Dato requerido";
-        $telefono = "";
+        $err_telefono = "Dato requerido";
+        $todo_ok = false;
     } else {
-        $telefono = htmlspecialchars(trim($_POST['telefono']));
+        $telefono = trim($_POST['telefono']);
     }
     
-    // 7. Comentarios (Opcional)
-    $comentarios = htmlspecialchars(trim($_POST['comentarios']));
+    // Comentarios (es opcional)
+    $comentarios = trim($_POST['comentarios']);
     
-    // Verificamos si el checkbox opcional está marcado (puedes añadir validación si fuera obligatorio)
-    $condiciones = isset($_POST['condiciones']) ? true : false;
-    
-    // Si el array de errores está limpio, procesamos el éxito
-    if (empty($errores)) {
-        $reserva_confirmada = true;
+    // Si no ha saltado ningun error
+    if ($todo_ok) {
+        $mostrar_exito = true;
     }
 }
 ?>
@@ -78,92 +91,82 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Reservas - El Tataguyo</title>
+    <title>Reservas El Tataguyo</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #fcfbf9; color: #333; }
-        .contenedor { max-width: 550px; background: white; padding: 25px; border: 1px solid #dcd1c4; border-radius: 4px; margin: 0 auto; }
-        h2 { color: #5a1216; font-serif; border-bottom: 2px solid #5a1216; padding-bottom: 5px; }
-        .campo { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.95em; }
-        input[type="text"], select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 3px; }
-        textarea { height: 80px; resize: vertical; }
-        .error-alerta { color: #b30000; font-size: 0.85em; font-weight: bold; margin-top: 4px; }
-        .msg-exito { background-color: #f3f7f0; border-left: 5px solid #4a7c59; padding: 15px; margin-bottom: 20px; font-size: 1.05em; line-height: 1.5; }
-        input[type="submit"] { background-color: #5a1216; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 3px; font-weight: bold; }
-        input[type="submit"]:hover { background-color: #3d0c0e; }
+        /* Un estilo muy básico para que no quede pegado a los bordes, nada cantoso */
+        body { font-family: sans-serif; margin: 40px; background-color: #fafafa; }
+        .error { color: red; font-weight: bold; font-size: 0.9em; }
+        .exito { background-color: #d4edda; color: #155724; padding: 15px; border: 1px solid #c3e6cb; margin-bottom: 20px; }
+        .campo { margin-bottom: 12px; }
+        label { display: block; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="contenedor">
     <h2>Petición de Reservas</h2>
 
-    <?php if ($_SERVER["REQUEST_METHOD"] == "POST" && $reserva_confirmada): ?>
-        <div class="msg-exito">
+    <?php if ($mostrar_exito): ?>
+        <div class="exito">
             Don/Doña <?php echo $nombre; ?> su reserva el <?php echo $fecha; ?> a las <?php echo $hora; ?> ha sido registrada. Próximamente recibirá confirmación de su reserva en la dirección de correo electrónico <?php echo $email; ?>. Gracias.
         </div>
     <?php endif; ?>
 
-    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST">
+    <form action="reservas.php" method="POST">
         
         <div class="campo">
-            <label for="nombre">Nombre y apellidos *</label>
-            <input type="text" id="nombre" name="nombre" value="<?php echo $nombre; ?>">
-            <?php if (isset($errores['nombre'])) echo "<div class='error-alerta'>".$errores['nombre']."</div>"; ?>
+            <label>Nombre y apellidos *</label>
+            <input type="text" name="nombre" value="<?php echo $nombre; ?>">
+            <?php if ($err_nombre) echo "<span class='error'>$err_nombre</span>"; ?>
         </div>
 
         <div class="campo">
-            <label for="fecha">Fecha * (Ej: 14/12/2026)</label>
-            <input type="text" id="fecha" name="fecha" value="<?php echo $fecha; ?>">
-            <?php if (isset($errores['fecha'])) echo "<div class='error-alerta'>".$errores['fecha']."</div>"; ?>
+            <label>Fecha *</label>
+            <input type="text" name="fecha" value="<?php echo $fecha; ?>">
+            <?php if ($err_fecha) echo "<span class='error'>$err_fecha</span>"; ?>
         </div>
 
         <div class="campo">
-            <label for="hora">Hora *</label>
-            <select id="hora" name="hora">
-                <option value="">Seleccione hora...</option>
+            <label>Hora *</label>
+            <select name="hora">
+                <option value="">-- Seleccione --</option>
                 <option value="13:00" <?php if($hora == "13:00") echo "selected"; ?>>13:00</option>
                 <option value="14:00" <?php if($hora == "14:00") echo "selected"; ?>>14:00</option>
                 <option value="15:00" <?php if($hora == "15:00") echo "selected"; ?>>15:00</option>
                 <option value="21:00" <?php if($hora == "21:00") echo "selected"; ?>>21:00</option>
                 <option value="22:00" <?php if($hora == "22:00") echo "selected"; ?>>22:00</option>
             </select>
-            <?php if (isset($errores['hora'])) echo "<div class='error-alerta'>".$errores['hora']."</div>"; ?>
+            <?php if ($err_hora) echo "<span class='error'>$err_hora</span>"; ?>
         </div>
 
         <div class="campo">
-            <label for="comensales">Nº de comensales *</label>
-            <input type="text" id="comensales" name="comensales" value="<?php echo $comensales; ?>">
-            <?php if (isset($errores['comensales'])) echo "<div class='error-alerta'>".$errores['comensales']."</div>"; ?>
+            <label>Nº de comensales *</label>
+            <input type="text" name="comensales" value="<?php echo $comensales; ?>">
+            <?php if ($err_comensales) echo "<span class='error'>$err_comensales</span>"; ?>
         </div>
 
         <div class="campo">
-            <label for="email">E-mail *</label>
-            <input type="text" id="email" name="email" value="<?php echo $email; ?>">
-            <?php if (isset($errores['email'])) echo "<div class='error-alerta'>".$errores['email']."</div>"; ?>
+            <label>E-mail *</label>
+            <input type="text" name="email" value="<?php echo $email; ?>">
+            <?php if ($err_email) echo "<span class='error'>$err_email</span>"; ?>
         </div>
 
         <div class="campo">
-            <label for="telefono">Teléfono *</label>
-            <input type="text" id="telefono" name="telefono" value="<?php echo $telefono; ?>">
-            <?php if (isset($errores['telefono'])) echo "<div class='error-alerta'>".$errores['telefono']."</div>"; ?>
+            <label>Teléfono *</label>
+            <input type="text" name="telefono" value="<?php echo $telefono; ?>">
+            <?php if ($err_telefono) echo "<span class='error'>$err_telefono</span>"; ?>
         </div>
 
         <div class="campo">
-            <label for="comentarios">Comentarios</label>
-            <textarea id="comentarios" name="comentarios"><?php echo $comentarios; ?></textarea>
+            <label>Comentarios</label>
+            <textarea name="comentarios"><?php echo $comentarios; ?></textarea>
         </div>
 
         <div class="campo">
-            <input type="checkbox" id="condiciones" name="condiciones" <?php if (isset($_POST['condiciones'])) echo "checked"; ?>>
-            <label style="display:inline;" for="condiciones">He leído y acepto las condiciones de uso</label>
+            <input type="checkbox" name="condiciones" <?php if(isset($_POST['condiciones'])) echo "checked"; ?>> He leído y acepto las condiciones de uso
         </div>
 
-        <div class="campo" style="margin-top: 20px;">
-            <input type="submit" value="Enviar">
-        </div>
+        <button type="submit">Enviar</button>
     </form>
-</div>
 
 </body>
 </html>
